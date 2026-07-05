@@ -2,6 +2,18 @@
 
 This repository is developed locally first, then synced to GitHub, then pulled on a GPU server for experiments.
 
+## Project Positioning
+
+This project uses PROB as the OWOD experiment pipeline and baseline. It is not a plain PROB reproduction project.
+
+When changing code, treat the existing PROB implementation as:
+
+- the runnable training/evaluation pipeline;
+- the baseline model for final result tables and parameter comparisons;
+- the control group for later model variants.
+
+New model work should preserve a comparable PROB baseline path, keep metrics extractable from real experiment logs, and make parameter-count differences against PROB explicit.
+
 ## Working Flow
 
 1. Edit and test code locally in `/mnt/e/paper/PB`.
