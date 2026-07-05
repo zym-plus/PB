@@ -153,6 +153,8 @@ Defaults exported by `scripts/server_env.sh`:
 OWOD_VENV=/home/zym/venvs/OWOD
 OWOD_DATA_ROOT=/home/zym/data/OWOD
 COCO_PATH=/home/zym/data/coco
+PROB_RESULTS_ROOT=/home/zym/data/prob-results
+MOWODB_WEIGHTS_DIR=/home/zym/data/prob-results/MOWODB
 OWOD_SPLITS_ROOT=<repo>/data/OWOD
 ```
 
@@ -164,9 +166,9 @@ Run the fastest server smoke test after `git pull`:
 bash scripts/smoke_server_pipeline.sh
 ```
 
-This loads the server environment, reads one real OWOD sample, builds the PROB baseline model, and runs one forward/loss pass on GPU. Use `--backward` if you also want one backward pass.
+This loads the server environment, checks M-OWODB baseline weights under `/home/zym/data/prob-results/MOWODB`, prepares symlinks under `exps/MOWODB/PROB`, reads one real M-OWODB sample, builds the PROB baseline model, and runs one forward/loss pass on GPU. Use `--backward` if you also want one backward pass.
 
-The same smoke command also checks the final visualization path by generating an OWOD-style HTML/CSV result table under `/tmp/pb_smoke_visualization`. If Chrome/Chromium is available, it also renders a screenshot. To check visualization with real experiment logs instead of demo data:
+The same smoke command also checks the final visualization path by generating an OWOD-style HTML/CSV result table under `/tmp/pb_mowodb_smoke_visualization`. If Chrome/Chromium is available, it also renders a screenshot. To check visualization with real experiment logs instead of demo data:
 
 ```bash
 bash scripts/smoke_server_pipeline.sh --visual-manifest result_manifest.json

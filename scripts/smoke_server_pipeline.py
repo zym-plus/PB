@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fast server smoke test for the PROB baseline pipeline."""
+"""Fast server smoke test for the M-OWODB PROB baseline pipeline."""
 
 import argparse
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Run one tiny PROB pipeline smoke test.")
+    parser = argparse.ArgumentParser(description="Run one tiny M-OWODB PROB baseline smoke test.")
     parser.add_argument("--dataset", default="TOWOD", choices=["TOWOD", "OWDETR", "VOC2007"])
     parser.add_argument("--train-set", default="owod_t1_train")
     parser.add_argument("--test-set", default="owod_all_task_test")
@@ -24,9 +24,14 @@ def parse_args():
     parser.add_argument("--backward", action="store_true", help="also run one backward pass")
     parser.add_argument("--data-root", default=os.environ.get("OWOD_DATA_ROOT", "/home/zym/data/OWOD"))
     parser.add_argument("--splits-root", default=os.environ.get("OWOD_SPLITS_ROOT", "data/OWOD"))
+    parser.add_argument("--baseline-weights-dir", default=os.environ.get("MOWODB_WEIGHTS_DIR", "/home/zym/data/prob-results/MOWODB"))
+    parser.add_argument("--eval-checkpoint-dir", default="exps/MOWODB/PROB")
+    parser.add_argument("--skip-baseline-weights-check", action="store_true")
+    parser.add_argument("--link-baseline-weights", action=argparse.BooleanOptionalAction, default=True,
+                        help="create/update symlinks in exps/MOWODB/PROB for eval scripts")
     parser.add_argument("--skip-visualization", action="store_true", help="skip result-table smoke check")
     parser.add_argument("--visual-manifest", help="optional real result manifest for visualization check")
-    parser.add_argument("--visual-output-dir", default="/tmp/pb_smoke_visualization")
+    parser.add_argument("--visual-output-dir", default="/tmp/pb_mowodb_smoke_visualization")
     parser.add_argument("--skip-visual-screenshot", action="store_true", help="skip browser rendering check")
     return parser.parse_args()
 
@@ -80,6 +85,38 @@ def check_file(path):
     if path.stat().st_size <= 0:
         raise RuntimeError(f"expected smoke output is empty: {path}")
     return path
+
+
+def check_mowodb_baseline_weights(cli):
+    if cli.skip_baseline_weights_check:
+        print("[smoke] M-OWODB baseline weight check skipped by flag")
+        return
+
+    source_dir = Path(cli.baseline_weights_dir)
+    eval_dir = Path(cli.eval_checkpoint_dir)
+    required = [f"t{task}.pth" for task in range(1, 5)]
+
+    print(f"[smoke] checking M-OWODB baseline weights in {source_dir}")
+    for filename in required:
+        check_file(source_dir / filename)
+
+    if not cli.link_baseline_weights:
+        return
+
+    eval_dir.mkdir(parents=True, exist_ok=True)
+    for filename in required:
+        source = (source_dir / filename).resolve()
+        target = eval_dir / filename
+        if target.is_symlink():
+            if target.resolve() == source:
+                continue
+            target.unlink()
+        elif target.exists():
+            if target.resolve() == source:
+                continue
+            raise FileExistsError(f"refusing to replace existing checkpoint: {target}")
+        target.symlink_to(source)
+    print(f"[smoke] M-OWODB eval checkpoint symlinks ready in {eval_dir}")
 
 
 def find_browser():
@@ -153,8 +190,9 @@ def main():
 
     args = build_main_args(cli, get_args_parser)
     validate_owod_paths(args)
+    check_mowodb_baseline_weights(cli)
 
-    print("[smoke] building dataset")
+    print("[smoke] building M-OWODB dataset")
     dataset = OWDetection(
         args,
         args.data_root,
@@ -163,7 +201,7 @@ def main():
         transforms=make_coco_transforms(args.train_set),
         dataset=args.dataset,
     )
-    print(f"[smoke] dataset={args.dataset} train_set={args.train_set} size={len(dataset)}")
+    print(f"[smoke] benchmark=M-OWODB dataset={args.dataset} train_set={args.train_set} size={len(dataset)}")
 
     index, samples, targets = get_one_batch(dataset, cli.max_scan, utils)
     device = torch.device(cli.device)
@@ -192,7 +230,7 @@ def main():
     print(f"[smoke] loss={loss.item():.6f}")
     print(f"[smoke] trainable_params={n_parameters}")
     print(f"[smoke] elapsed_sec={time.time() - start:.2f}")
-    print("[smoke] OK: PROB baseline pipeline can read data, build model, and run one batch")
+    print("[smoke] OK: M-OWODB PROB baseline pipeline can read data, build model, and run one batch")
 
     if cli.skip_visualization:
         print("[smoke] visualization check skipped by flag")

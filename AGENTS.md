@@ -39,6 +39,24 @@ Server dataset locations:
 
 When changing training, evaluation, or dataset-loading code, keep these server paths in mind. Do not assume datasets live inside this repository.
 
+## Baseline Weights
+
+Local PROB baseline weights are stored at:
+
+```text
+/mnt/e/paper/PB/MOWODB
+```
+
+This directory contains trained PROB M-OWODB checkpoints such as `t1.pth`, `t2.pth`, `t3.pth`, and `t4.pth`. Treat these files as external experiment artifacts, not source code. Do not upload them to GitHub.
+
+On the GPU server, place these baseline checkpoints outside the code checkout at:
+
+```text
+/home/zym/data/prob-results/MOWODB
+```
+
+The evaluation scripts currently look for M-OWODB baseline weights under `exps/MOWODB/PROB/*.pth`. Prefer creating symlinks from `exps/MOWODB/PROB/` to `/home/zym/data/prob-results/MOWODB/` rather than copying checkpoints into the GitHub repository.
+
 ## GitHub Sync
 
 The local repository should be pushed to:
@@ -70,6 +88,8 @@ bash scripts/smoke_server_pipeline.sh
 ```bash
 OWOD_DATA_ROOT=/home/zym/data/OWOD
 COCO_PATH=/home/zym/data/coco
+PROB_RESULTS_ROOT=/home/zym/data/prob-results
+MOWODB_WEIGHTS_DIR=/home/zym/data/prob-results/MOWODB
 OWOD_SPLITS_ROOT=<repo>/data/OWOD
 ```
 
@@ -82,7 +102,7 @@ OWOD_DATA_ROOT=/other/OWOD COCO_PATH=/other/coco ./run.sh
 ## Experiment Rules
 
 - Prefer running expensive training and evaluation commands on the GPU server.
-- Use `bash scripts/smoke_server_pipeline.sh` as the fastest post-pull check before launching long experiments. It must verify both the PROB baseline one-batch path and the final result-table visualization path.
+- Use `bash scripts/smoke_server_pipeline.sh` as the fastest post-pull check before launching long experiments. It must verify M-OWODB data, `/home/zym/data/prob-results/MOWODB` baseline weights, `exps/MOWODB/PROB` symlinks, the PROB baseline one-batch path, and the final result-table visualization path.
 - Before suggesting an experiment command, check whether it needs the COCO or OWOD path and point it at `/home/zym/data/coco` or `/home/zym/data/OWOD`.
 - Keep local changes commit-ready so they can be pushed before server runs.
 - If the server hostname or repository path is needed and not already known, ask for it instead of guessing.

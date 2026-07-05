@@ -10,6 +10,8 @@ OWOD_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export OWOD_VENV="${OWOD_VENV:-/home/zym/venvs/OWOD}"
 export OWOD_DATA_ROOT="${OWOD_DATA_ROOT:-/home/zym/data/OWOD}"
 export COCO_PATH="${COCO_PATH:-/home/zym/data/coco}"
+export PROB_RESULTS_ROOT="${PROB_RESULTS_ROOT:-/home/zym/data/prob-results}"
+export MOWODB_WEIGHTS_DIR="${MOWODB_WEIGHTS_DIR:-${PROB_RESULTS_ROOT}/MOWODB}"
 export OWOD_SPLITS_ROOT="${OWOD_SPLITS_ROOT:-${OWOD_REPO_ROOT}/data/OWOD}"
 
 case ":${PYTHONPATH:-}:" in
