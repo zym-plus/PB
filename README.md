@@ -158,6 +158,32 @@ OWOD_SPLITS_ROOT=<repo>/data/OWOD
 
 The server data root should contain `Annotations/` and `JPEGImages/`. Split files are read from the repository by default, so the code can be pulled without copying the full dataset into the repo.
 
+### Result Table Visualization
+
+After training, create a manifest that points to the real experiment directories containing `log.txt`:
+
+```json
+{
+  "title": "M-OWODB Final Results",
+  "baseline": "PROB",
+  "gpus": "4 cards",
+  "trained_at": "2026-07-05 18:10",
+  "runs": [
+    {"method": "PROB", "task": 1, "path": "exps/MOWODB/PROB/t1"},
+    {"method": "PROB", "task": 2, "path": "exps/MOWODB/PROB/t2"},
+    {"method": "NewModel", "task": 1, "path": "exps/MOWODB/NewModel/t1"}
+  ]
+}
+```
+
+Generate the table:
+
+```bash
+python scripts/visualize_results.py --manifest result_manifest.json --output-dir results/tables
+```
+
+The script parses each run's latest non-empty `test_metrics` from `log.txt`, uses `PROB` as the parameter baseline, and writes both `owod_results.html` and `owod_results.csv`.
+
 ## 🤖 Training
 
 #### Training on single node
