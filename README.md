@@ -158,6 +158,14 @@ OWOD_SPLITS_ROOT=<repo>/data/OWOD
 
 The server data root should contain `Annotations/` and `JPEGImages/`. Split files are read from the repository by default, so the code can be pulled without copying the full dataset into the repo.
 
+Run the fastest server smoke test after `git pull`:
+
+```bash
+bash scripts/smoke_server_pipeline.sh
+```
+
+This loads the server environment, reads one real OWOD sample, builds the PROB baseline model, and runs one forward/loss pass on GPU. Use `--backward` if you also want one backward pass.
+
 ### Result Table Visualization
 
 After training, create a manifest that points to the real experiment directories containing `log.txt`:
