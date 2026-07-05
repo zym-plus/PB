@@ -49,7 +49,21 @@ Typical server update flow:
 ```bash
 cd <server-repo-path>
 git pull
-source /home/zym/venvs/OWOD/bin/activate
+source scripts/server_env.sh
+```
+
+`scripts/server_env.sh` activates `/home/zym/venvs/OWOD` when present and exports:
+
+```bash
+OWOD_DATA_ROOT=/home/zym/data/OWOD
+COCO_PATH=/home/zym/data/coco
+OWOD_SPLITS_ROOT=<repo>/data/OWOD
+```
+
+These can be overridden before running scripts, for example:
+
+```bash
+OWOD_DATA_ROOT=/other/OWOD COCO_PATH=/other/coco ./run.sh
 ```
 
 ## Experiment Rules

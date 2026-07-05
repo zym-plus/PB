@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../scripts/server_env.sh"
+
 echo running eval of prob-detr, S-OWODB dataset
 
 set -x
@@ -7,7 +9,7 @@ set -x
 EXP_DIR=exps/SOWODB/PROB
 PY_ARGS=${@:1}
 WANDB_NAME=PROB_V1
- 
+
 
 PY_ARGS=${@:1}
 python -u main_open_world.py \
@@ -16,8 +18,6 @@ python -u main_open_world.py \
     --model_type 'prob' --obj_loss_coef 8e-4 --obj_temp 1.3\
     --pretrain "${EXP_DIR}/t1.pth" --eval --wandb_project ""\
     ${PY_ARGS}
-    
-    
 PY_ARGS=${@:1}
 python -u main_open_world.py \
     --output_dir "${EXP_DIR}/eval" --dataset OWDETR --PREV_INTRODUCED_CLS 19 --CUR_INTRODUCED_CLS 21 \
@@ -25,8 +25,7 @@ python -u main_open_world.py \
     --model_type 'prob' --obj_loss_coef 8e-4 --obj_temp 1.3\
     --pretrain "${EXP_DIR}/t2.pth" --eval --wandb_project ""\
     ${PY_ARGS}
-    
-    
+
 PY_ARGS=${@:1}
 python -u main_open_world.py \
     --output_dir "${EXP_DIR}/eval" --dataset OWDETR --PREV_INTRODUCED_CLS 40 --CUR_INTRODUCED_CLS 20 \
@@ -34,8 +33,8 @@ python -u main_open_world.py \
     --model_type 'prob' --obj_loss_coef 8e-4 --obj_temp 1.3\
     --pretrain "${EXP_DIR}/t3.pth" --eval --wandb_project ""\
     ${PY_ARGS}
-    
-    
+
+
 PY_ARGS=${@:1}
 python -u main_open_world.py \
     --output_dir "${EXP_DIR}/eval" --dataset OWDETR --PREV_INTRODUCED_CLS 60 --CUR_INTRODUCED_CLS 20 \
@@ -43,5 +42,5 @@ python -u main_open_world.py \
     --model_type 'prob' --obj_loss_coef 8e-4 --obj_temp 1.3\
     --pretrain "${EXP_DIR}/t4.pth" --eval --wandb_project ""\
     ${PY_ARGS}
-    
-    
+
+

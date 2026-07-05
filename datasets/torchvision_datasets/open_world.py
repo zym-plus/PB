@@ -124,6 +124,7 @@ class OWDetection(VisionDataset):
     def __init__(self,
                  args,
                  root,
+                 splits_root=None,
                  image_set='train',
                  transforms=None,
                  filter_pct=-1,
@@ -141,10 +142,11 @@ class OWDetection(VisionDataset):
         self.dataset=dataset
 
         self.root=str(root)
+        self.splits_root = str(splits_root or root)
         annotation_dir = os.path.join(self.root, 'Annotations')
         image_dir = os.path.join(self.root, 'JPEGImages')
 
-        file_names = self.extract_fns(image_set, self.root)
+        file_names = self.extract_fns(image_set, self.splits_root)
         if image_set == 'voc2007_trainval':
             print('PASCAL-VOC2007 dataset used; clearing images with missing object classes')
             prev_intro_cls = self.args.PREV_INTRODUCED_CLS

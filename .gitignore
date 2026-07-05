@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Experiment outputs
+wandb/
+*.pth
+*.pt
+*.ckpt
+exps/*
+!exps/readme.md

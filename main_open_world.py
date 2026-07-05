@@ -31,6 +31,35 @@ from models import build_model
 import wandb
 
 
+REPO_ROOT = Path(__file__).resolve().parent
+DEFAULT_OWOD_DATA_ROOT = os.environ.get('OWOD_DATA_ROOT', '/home/zym/data/OWOD')
+DEFAULT_COCO_PATH = os.environ.get('COCO_PATH', '/home/zym/data/coco')
+DEFAULT_OWOD_SPLITS_ROOT = os.environ.get('OWOD_SPLITS_ROOT', str(REPO_ROOT / 'data' / 'OWOD'))
+
+
+def _validate_dir(path, description):
+    path = Path(path).expanduser()
+    if not path.exists():
+        raise FileNotFoundError(f'{description} does not exist: {path}')
+    if not path.is_dir():
+        raise NotADirectoryError(f'{description} is not a directory: {path}')
+    return path
+
+
+def validate_owod_paths(args):
+    data_root = _validate_dir(args.data_root, 'OWOD data root')
+    splits_root = _validate_dir(args.splits_root, 'OWOD split root')
+
+    for subdir in ('Annotations', 'JPEGImages'):
+        _validate_dir(data_root / subdir, f'OWOD data {subdir} directory')
+
+    split_dir = splits_root / 'ImageSets' / args.dataset
+    _validate_dir(split_dir, f'OWOD split directory for dataset {args.dataset}')
+    for split_name in (args.train_set, args.test_set):
+        split_file = split_dir / f'{split_name}.txt'
+        if not split_file.exists():
+            raise FileNotFoundError(f'OWOD split file does not exist: {split_file}')
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Deformable DETR Detector', add_help=False)
@@ -100,6 +129,7 @@ def get_args_parser():
     parser.add_argument('--focal_alpha', default=0.25, type=float)
     
     # dataset parameters
+    parser.add_argument('--coco_path', default=DEFAULT_COCO_PATH, type=str)
     parser.add_argument('--coco_panoptic_path', type=str)
     parser.add_argument('--remove_difficult', action='store_true')
     parser.add_argument('--output_dir', default='',
@@ -132,7 +162,9 @@ def get_args_parser():
     parser.add_argument('--num_classes', default=81, type=int)
     parser.add_argument('--nc_epoch', default=0, type=int)
     parser.add_argument('--dataset', default='OWDETR', help='defines which dataset is used. Built for: {TOWOD, OWDETR, VOC2007}')
-    parser.add_argument('--data_root', default='./data/OWOD', type=str)
+    parser.add_argument('--data_root', default=DEFAULT_OWOD_DATA_ROOT, type=str)
+    parser.add_argument('--splits_root', default=DEFAULT_OWOD_SPLITS_ROOT, type=str,
+                        help='root that contains ImageSets split files')
     parser.add_argument('--unk_conf_w', default=1.0, type=float)
 
     ################ PROB OWOD ################
@@ -393,11 +425,12 @@ def main(args):
 
 def get_datasets(args):
     print(args.dataset)
+    validate_owod_paths(args)
 
     train_set = args.train_set
     test_set = args.test_set
-    dataset_train = OWDetection(args, args.data_root, image_set=args.train_set, transforms=make_coco_transforms(args.train_set), dataset = args.dataset)
-    dataset_val = OWDetection(args, args.data_root, image_set=args.test_set, dataset = args.dataset, transforms=make_coco_transforms(args.test_set))
+    dataset_train = OWDetection(args, args.data_root, splits_root=args.splits_root, image_set=args.train_set, transforms=make_coco_transforms(args.train_set), dataset = args.dataset)
+    dataset_val = OWDetection(args, args.data_root, splits_root=args.splits_root, image_set=args.test_set, dataset = args.dataset, transforms=make_coco_transforms(args.test_set))
 
     print(args.train_set)
     print(args.test_set)
@@ -409,7 +442,7 @@ def get_datasets(args):
 
 def create_ft_dataset(args, image_sorted_scores):
     print(f'found a total of {len(image_sorted_scores.keys())} images')
-    tmp_dir=args.data_root +'/ImageSets/'+args.dataset+"/"+args.exemplar_replay_dir+"/"
+    tmp_dir = Path(args.splits_root) / 'ImageSets' / args.dataset / args.exemplar_replay_dir
     #tmp_dir=args.data_root +'/ImageSets/'+args.exemplar_replay_dir+"/"
 
     class_sorted_scores={}
@@ -451,7 +484,7 @@ def create_ft_dataset(args, image_sorted_scores):
                         
     print(f'found {len(np.unique(save_imgs))} images in run')
     if len(args.exemplar_replay_prev_file)>0:
-        previous_ft = open(tmp_dir+args.exemplar_replay_prev_file,'r').read().splitlines()
+        previous_ft = (tmp_dir / args.exemplar_replay_prev_file).read_text().splitlines()
         save_imgs+=previous_ft
         
     save_imgs=np.unique(save_imgs)
@@ -460,7 +493,7 @@ def create_ft_dataset(args, image_sorted_scores):
         save_imgs=save_imgs[:args.exemplar_replay_max_length]
     
     os.makedirs(tmp_dir, exist_ok=True)
-    with open(tmp_dir+args.exemplar_replay_cur_file, 'w') as f:
+    with open(tmp_dir / args.exemplar_replay_cur_file, 'w') as f:
         for line in save_imgs:
             f.write(line)
             f.write('\n')

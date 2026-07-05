@@ -138,6 +138,26 @@ PROB/
 
 Currently, we follow the VOC format for data loading and evaluation
 
+## Server Quick Start
+
+On the experiment server, this fork is configured to use the existing environment and external datasets:
+
+```bash
+git pull
+source scripts/server_env.sh
+```
+
+Defaults exported by `scripts/server_env.sh`:
+
+```bash
+OWOD_VENV=/home/zym/venvs/OWOD
+OWOD_DATA_ROOT=/home/zym/data/OWOD
+COCO_PATH=/home/zym/data/coco
+OWOD_SPLITS_ROOT=<repo>/data/OWOD
+```
+
+The server data root should contain `Annotations/` and `JPEGImages/`. Split files are read from the repository by default, so the code can be pulled without copying the full dataset into the repo.
+
 ## 🤖 Training
 
 #### Training on single node

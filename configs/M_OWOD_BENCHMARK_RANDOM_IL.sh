@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/../scripts/server_env.sh"
+
 echo running training of prob-detr with random exemplar selection, M-OWODB dataset
 
 set -x
