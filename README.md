@@ -166,6 +166,12 @@ bash scripts/smoke_server_pipeline.sh
 
 This loads the server environment, reads one real OWOD sample, builds the PROB baseline model, and runs one forward/loss pass on GPU. Use `--backward` if you also want one backward pass.
 
+The same smoke command also checks the final visualization path by generating an OWOD-style HTML/CSV result table under `/tmp/pb_smoke_visualization`. If Chrome/Chromium is available, it also renders a screenshot. To check visualization with real experiment logs instead of demo data:
+
+```bash
+bash scripts/smoke_server_pipeline.sh --visual-manifest result_manifest.json
+```
+
 ### Result Table Visualization
 
 After training, create a manifest that points to the real experiment directories containing `log.txt`:

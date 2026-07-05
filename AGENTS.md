@@ -82,7 +82,7 @@ OWOD_DATA_ROOT=/other/OWOD COCO_PATH=/other/coco ./run.sh
 ## Experiment Rules
 
 - Prefer running expensive training and evaluation commands on the GPU server.
-- Use `bash scripts/smoke_server_pipeline.sh` as the fastest post-pull check before launching long experiments.
+- Use `bash scripts/smoke_server_pipeline.sh` as the fastest post-pull check before launching long experiments. It must verify both the PROB baseline one-batch path and the final result-table visualization path.
 - Before suggesting an experiment command, check whether it needs the COCO or OWOD path and point it at `/home/zym/data/coco` or `/home/zym/data/OWOD`.
 - Keep local changes commit-ready so they can be pushed before server runs.
 - If the server hostname or repository path is needed and not already known, ask for it instead of guessing.

@@ -4,7 +4,11 @@
 import argparse
 import os
 import random
+import shutil
+import subprocess
+import sys
 import time
+from pathlib import Path
 
 
 def parse_args():
@@ -20,6 +24,10 @@ def parse_args():
     parser.add_argument("--backward", action="store_true", help="also run one backward pass")
     parser.add_argument("--data-root", default=os.environ.get("OWOD_DATA_ROOT", "/home/zym/data/OWOD"))
     parser.add_argument("--splits-root", default=os.environ.get("OWOD_SPLITS_ROOT", "data/OWOD"))
+    parser.add_argument("--skip-visualization", action="store_true", help="skip result-table smoke check")
+    parser.add_argument("--visual-manifest", help="optional real result manifest for visualization check")
+    parser.add_argument("--visual-output-dir", default="/tmp/pb_smoke_visualization")
+    parser.add_argument("--skip-visual-screenshot", action="store_true", help="skip browser rendering check")
     return parser.parse_args()
 
 
@@ -63,6 +71,65 @@ def get_one_batch(dataset, max_scan, utils):
             samples, targets = utils.collate_fn([(image, target)])
             return index, samples, targets
     raise RuntimeError(f"no non-empty target found in first {max_scan} samples")
+
+
+def check_file(path):
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"expected smoke output is missing: {path}")
+    if path.stat().st_size <= 0:
+        raise RuntimeError(f"expected smoke output is empty: {path}")
+    return path
+
+
+def find_browser():
+    for name in ("google-chrome", "chromium", "chromium-browser"):
+        path = shutil.which(name)
+        if path:
+            return path
+    return None
+
+
+def run_visualization_smoke(cli):
+    output_dir = Path(cli.visual_output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    script = Path(__file__).resolve().with_name("visualize_results.py")
+
+    command = [sys.executable, str(script), "--output-dir", str(output_dir)]
+    if cli.visual_manifest:
+        command.extend(["--manifest", cli.visual_manifest])
+    else:
+        command.append("--demo")
+
+    print("[smoke] running result-table visualization check")
+    subprocess.run(command, check=True)
+
+    html_path = check_file(output_dir / "owod_results.html")
+    csv_path = check_file(output_dir / "owod_results.csv")
+    print(f"[smoke] visualization_html={html_path}")
+    print(f"[smoke] visualization_csv={csv_path}")
+
+    if cli.skip_visual_screenshot:
+        print("[smoke] visualization screenshot skipped by flag")
+        return
+
+    browser = find_browser()
+    if not browser:
+        print("[smoke] warning: no Chrome/Chromium found; skipped HTML screenshot render")
+        return
+
+    screenshot_path = output_dir / "owod_results.png"
+    subprocess.run([
+        browser,
+        "--headless",
+        "--disable-gpu",
+        "--no-sandbox",
+        "--window-size=1800,900",
+        f"--screenshot={screenshot_path}",
+        html_path.resolve().as_uri(),
+    ], check=True)
+    check_file(screenshot_path)
+    print(f"[smoke] visualization_screenshot={screenshot_path}")
 
 
 def main():
@@ -126,6 +193,12 @@ def main():
     print(f"[smoke] trainable_params={n_parameters}")
     print(f"[smoke] elapsed_sec={time.time() - start:.2f}")
     print("[smoke] OK: PROB baseline pipeline can read data, build model, and run one batch")
+
+    if cli.skip_visualization:
+        print("[smoke] visualization check skipped by flag")
+    else:
+        run_visualization_smoke(cli)
+        print("[smoke] OK: final result visualization can generate HTML/CSV and render when a browser is available")
 
 
 if __name__ == "__main__":
