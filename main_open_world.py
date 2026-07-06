@@ -61,6 +61,47 @@ def validate_owod_paths(args):
             raise FileNotFoundError(f'OWOD split file does not exist: {split_file}')
 
 
+def _jsonable(value):
+    if isinstance(value, torch.Tensor):
+        if value.numel() == 1:
+            return value.item()
+        return value.detach().cpu().tolist()
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    return value
+
+
+def write_eval_outputs(args, test_stats, coco_evaluator, output_dir, n_parameters):
+    if not args.output_dir or not utils.is_main_process():
+        return
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    record = {
+        'epoch': getattr(args, 'start_epoch', None),
+        'n_parameters': n_parameters,
+        'test_metrics': test_stats.get('metrics', {}),
+        'checkpoint': args.pretrain or args.resume,
+        'dataset': args.dataset,
+        'train_set': args.train_set,
+        'test_set': args.test_set,
+        'prev_introduced_cls': args.PREV_INTRODUCED_CLS,
+        'cur_introduced_cls': args.CUR_INTRODUCED_CLS,
+    }
+    with (output_dir / "log.txt").open("a") as f:
+        f.write(json.dumps(_jsonable(record)) + "\n")
+
+    if coco_evaluator is not None and "bbox" in coco_evaluator.coco_eval:
+        utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, output_dir / "eval.pth")
+
+
 def get_args_parser():
     parser = argparse.ArgumentParser('Deformable DETR Detector', add_help=False)
     ################ Deformable DETR ################
@@ -306,6 +347,7 @@ def main(args):
         args.start_epoch = checkpoint['epoch'] + 1
         if args.eval:
             test_stats, coco_evaluator = evaluate(model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir, args)
+            write_eval_outputs(args, test_stats, coco_evaluator, output_dir, n_parameters)
             return
         
         
@@ -345,8 +387,7 @@ def main(args):
             )
         if args.eval:
             test_stats, coco_evaluator = evaluate(model, criterion, postprocessors, data_loader_val, base_ds, device, args.output_dir, args)
-            if args.output_dir:
-                utils.save_on_master(coco_evaluator.coco_eval["bbox"].eval, output_dir / "eval.pth")
+            write_eval_outputs(args, test_stats, coco_evaluator, output_dir, n_parameters)
             return
         
     if args.freeze_prob_model:           

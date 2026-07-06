@@ -84,3 +84,13 @@ python -u main_open_world.py \
     --wandb_name "${WANDB_NAME}_t4_ft"\
     --pretrain "${EXP_DIR}/t4/checkpoint0190.pth" \
     ${PY_ARGS}
+
+if [ "${RANK:-0}" = "0" ]; then
+    python scripts/render_experiment_results.py \
+        --title "M-OWODB PROB Training Results" \
+        --method PROB --baseline PROB --output-dir results/MOWODB/PROB \
+        --run "1:${EXP_DIR}/t1" \
+        --run "2:${EXP_DIR}/t2_ft" \
+        --run "3:${EXP_DIR}/t3_ft" \
+        --run "4:${EXP_DIR}/t4_ft"
+fi
