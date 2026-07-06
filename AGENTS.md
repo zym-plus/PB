@@ -24,6 +24,12 @@ New model work should preserve a comparable PROB baseline path, keep metrics ext
 
 ## Server Runtime
 
+Server repository checkout:
+
+```text
+/home/zym/PB
+```
+
 Use the existing Python environment on the server:
 
 ```bash
@@ -55,6 +61,12 @@ On the GPU server, place these baseline checkpoints outside the code checkout at
 /home/zym/data/prob-results/MOWODB
 ```
 
+The currently available server checkpoint directory is:
+
+```text
+/home/zym/data/prob-results/MOWODB/MOWODB
+```
+
 The evaluation scripts currently look for M-OWODB baseline weights under `exps/MOWODB/PROB/*.pth`. Prefer creating symlinks from `exps/MOWODB/PROB/` to `/home/zym/data/prob-results/MOWODB/` rather than copying checkpoints into the GitHub repository.
 
 ## GitHub Sync
@@ -77,7 +89,7 @@ git push
 Typical server update flow:
 
 ```bash
-cd <server-repo-path>
+cd /home/zym/PB
 git pull
 source scripts/server_env.sh
 bash scripts/smoke_server_pipeline.sh
