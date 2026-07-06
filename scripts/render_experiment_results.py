@@ -20,6 +20,46 @@ def parse_run(value):
     return task, path
 
 
+def check_run_logs(runs):
+    missing = []
+    empty = []
+    invalid = []
+    for task, run_path in runs:
+        log_path = Path(run_path) / "log.txt"
+        if not log_path.exists():
+            missing.append((task, log_path))
+            continue
+
+        latest = None
+        try:
+            with log_path.open("r", encoding="utf-8") as f:
+                for line_no, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    record = json.loads(line)
+                    metrics = record.get("test_metrics")
+                    if isinstance(metrics, dict) and metrics:
+                        latest = line_no
+        except json.JSONDecodeError as exc:
+            invalid.append((task, log_path, exc.lineno, exc.msg))
+            continue
+
+        if latest is None:
+            empty.append((task, log_path))
+
+    if not missing and not empty and not invalid:
+        return
+
+    for task, path in missing:
+        print(f"missing task {task} log: {path}", file=sys.stderr)
+    for task, path in empty:
+        print(f"task {task} log has no non-empty test_metrics: {path}", file=sys.stderr)
+    for task, path, line_no, message in invalid:
+        print(f"invalid JSON in task {task} log {path}:{line_no}: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate OWOD final result HTML/CSV from task log.txt files.")
     parser.add_argument("--title", required=True)
@@ -30,6 +70,8 @@ def main():
     parser.add_argument("--run", action="append", type=parse_run, required=True,
                         help="task run directory in TASK:PATH format, for example 1:exps/MOWODB/PROB/t1")
     args = parser.parse_args()
+
+    check_run_logs(args.run)
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
