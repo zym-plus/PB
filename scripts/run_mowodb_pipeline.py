@@ -150,7 +150,7 @@ def is_stage_complete(stage, config):
 def build_stage_command(stage, config):
     common = config["common_args"]
     command = [
-        "bash", "./tools/run_dist_launch.sh", "1", "./main_open_world.py",
+        "bash", "./tools/run_dist_launch.sh", "1", sys.executable, "-u", "main_open_world.py",
         "--output_dir", stage["output_dir"],
         "--dataset", common["dataset"],
         "--PREV_INTRODUCED_CLS", str(stage["previous_classes"]),
@@ -200,7 +200,7 @@ def build_eval_command(item, config):
     eval_config = config["eval"]
     out_dir = Path(eval_config["output_dir"]) / item["name"]
     return [
-        "bash", "./tools/run_dist_launch.sh", "1", "./main_open_world.py",
+        "bash", "./tools/run_dist_launch.sh", "1", sys.executable, "-u", "main_open_world.py",
         "--output_dir", str(out_dir),
         "--dataset", common["dataset"],
         "--PREV_INTRODUCED_CLS", str(item["previous_classes"]),
