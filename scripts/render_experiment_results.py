@@ -67,6 +67,7 @@ def main():
     parser.add_argument("--baseline", default="PROB")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--manifest-name", default="eval_manifest.json")
+    parser.add_argument("--gpus", default=os.environ.get("CUDA_VISIBLE_DEVICES", "unknown"))
     parser.add_argument("--run", action="append", type=parse_run, required=True,
                         help="task run directory in TASK:PATH format, for example 1:exps/MOWODB/PROB/t1")
     args = parser.parse_args()
@@ -80,7 +81,7 @@ def main():
     manifest = {
         "title": args.title,
         "baseline": args.baseline,
-        "gpus": os.environ.get("CUDA_VISIBLE_DEVICES", "unknown"),
+        "gpus": args.gpus,
         "source": "experiment log.txt files",
         "runs": [
             {"method": args.method, "task": task, "path": path}

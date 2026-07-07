@@ -1,0 +1,178 @@
+{
+  "experiment": {
+    "name": "PROB",
+    "benchmark": "MOWODB",
+    "dataset": "TOWOD",
+    "method": "PROB",
+    "title": "M-OWODB PROB Pipeline Results",
+    "output_root": "exps/MOWODB/PROB",
+    "result_dir": "results/MOWODB/PROB",
+    "wandb_name": "PROB_V1"
+  },
+  "env": {
+    "data_root": "/home/zym/data/OWOD",
+    "splits_root": "/home/zym/PB/data/OWOD",
+    "coco_path": "/home/zym/data/coco"
+  },
+  "common_args": {
+    "dataset": "TOWOD",
+    "test_set": "owod_all_task_test",
+    "model_type": "prob",
+    "obj_loss_coef": "8e-4",
+    "obj_temp": "1.3",
+    "wandb_project": ""
+  },
+  "stages": [
+    {
+      "name": "t1",
+      "output_dir": "exps/MOWODB/PROB/t1",
+      "train_set": "owod_t1_train",
+      "previous_classes": 0,
+      "current_classes": 20,
+      "epochs": 41,
+      "expected_checkpoint": "exps/MOWODB/PROB/t1/checkpoint0040.pth",
+      "wandb_name": "PROB_V1_t1",
+      "exemplar": {
+        "enabled": true,
+        "dir": "PROB_V1",
+        "max_length": 850,
+        "current_file": "learned_owod_t1_ft.txt"
+      }
+    },
+    {
+      "name": "t2",
+      "output_dir": "exps/MOWODB/PROB/t2",
+      "train_set": "owod_t2_train",
+      "previous_classes": 20,
+      "current_classes": 20,
+      "epochs": 51,
+      "pretrain": "exps/MOWODB/PROB/t1/checkpoint0040.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t2/checkpoint0050.pth",
+      "lr": "2e-5",
+      "freeze_prob_model": true,
+      "wandb_name": "PROB_V1_t2",
+      "exemplar": {
+        "enabled": true,
+        "dir": "PROB_V1",
+        "max_length": 1743,
+        "previous_file": "learned_owod_t1_ft.txt",
+        "current_file": "learned_owod_t2_ft.txt"
+      }
+    },
+    {
+      "name": "t2_ft",
+      "output_dir": "exps/MOWODB/PROB/t2_ft",
+      "train_set": "PROB_V1/learned_owod_t2_ft",
+      "previous_classes": 20,
+      "current_classes": 20,
+      "epochs": 111,
+      "lr_drop": 40,
+      "pretrain": "exps/MOWODB/PROB/t2/checkpoint0050.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t2_ft/checkpoint0110.pth",
+      "wandb_name": "PROB_V1_t2_ft",
+      "requires_exemplar_file": "PROB_V1/learned_owod_t2_ft.txt"
+    },
+    {
+      "name": "t3",
+      "output_dir": "exps/MOWODB/PROB/t3",
+      "train_set": "owod_t3_train",
+      "previous_classes": 40,
+      "current_classes": 20,
+      "epochs": 121,
+      "pretrain": "exps/MOWODB/PROB/t2_ft/checkpoint0110.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t3/checkpoint0120.pth",
+      "lr": "2e-5",
+      "freeze_prob_model": true,
+      "wandb_name": "PROB_V1_t3",
+      "exemplar": {
+        "enabled": true,
+        "dir": "PROB_V1",
+        "max_length": 2361,
+        "previous_file": "learned_owod_t2_ft.txt",
+        "current_file": "learned_owod_t3_ft.txt"
+      }
+    },
+    {
+      "name": "t3_ft",
+      "output_dir": "exps/MOWODB/PROB/t3_ft",
+      "train_set": "PROB_V1/learned_owod_t3_ft",
+      "previous_classes": 40,
+      "current_classes": 20,
+      "epochs": 181,
+      "lr_drop": 35,
+      "pretrain": "exps/MOWODB/PROB/t3/checkpoint0120.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t3_ft/checkpoint0180.pth",
+      "wandb_name": "PROB_V1_t3_ft",
+      "requires_exemplar_file": "PROB_V1/learned_owod_t3_ft.txt"
+    },
+    {
+      "name": "t4",
+      "output_dir": "exps/MOWODB/PROB/t4",
+      "train_set": "owod_t4_train",
+      "previous_classes": 60,
+      "current_classes": 20,
+      "epochs": 191,
+      "pretrain": "exps/MOWODB/PROB/t3_ft/checkpoint0180.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t4/checkpoint0190.pth",
+      "lr": "2e-5",
+      "freeze_prob_model": true,
+      "wandb_name": "PROB_V1_t4",
+      "num_inst_per_class": 40,
+      "exemplar": {
+        "enabled": true,
+        "dir": "PROB_V1",
+        "max_length": 2749,
+        "previous_file": "learned_owod_t3_ft.txt",
+        "current_file": "learned_owod_t4_ft.txt"
+      }
+    },
+    {
+      "name": "t4_ft",
+      "output_dir": "exps/MOWODB/PROB/t4_ft",
+      "train_set": "PROB_V1/learned_owod_t4_ft",
+      "previous_classes": 60,
+      "current_classes": 20,
+      "epochs": 261,
+      "lr_drop": 50,
+      "pretrain": "exps/MOWODB/PROB/t4/checkpoint0190.pth",
+      "expected_checkpoint": "exps/MOWODB/PROB/t4_ft/checkpoint0260.pth",
+      "wandb_name": "PROB_V1_t4_ft",
+      "requires_exemplar_file": "PROB_V1/learned_owod_t4_ft.txt"
+    }
+  ],
+  "eval": {
+    "output_dir": "exps/MOWODB/PROB/eval",
+    "epochs": 191,
+    "lr_drop": 35,
+    "checkpoints": [
+      {
+        "task": 1,
+        "name": "t1",
+        "pretrain": "exps/MOWODB/PROB/t1/checkpoint0040.pth",
+        "previous_classes": 0,
+        "current_classes": 20
+      },
+      {
+        "task": 2,
+        "name": "t2",
+        "pretrain": "exps/MOWODB/PROB/t2_ft/checkpoint0110.pth",
+        "previous_classes": 20,
+        "current_classes": 20
+      },
+      {
+        "task": 3,
+        "name": "t3",
+        "pretrain": "exps/MOWODB/PROB/t3_ft/checkpoint0180.pth",
+        "previous_classes": 40,
+        "current_classes": 20
+      },
+      {
+        "task": 4,
+        "name": "t4",
+        "pretrain": "exps/MOWODB/PROB/t4_ft/checkpoint0260.pth",
+        "previous_classes": 60,
+        "current_classes": 20
+      }
+    ]
+  }
+}
