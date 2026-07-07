@@ -112,3 +112,45 @@ OWOD_DATA_ROOT=/other/OWOD COCO_PATH=/other/coco ./run.sh
 - Before suggesting an experiment command, check whether it needs the COCO or OWOD path and point it at `/home/zym/data/coco` or `/home/zym/data/OWOD`.
 - Keep local changes commit-ready so they can be pushed before server runs.
 - If the server hostname or repository path is needed and not already known, ask for it instead of guessing.
+
+## M-OWODB Pipeline Rules
+
+Use `scripts/run_mowodb_pipeline.py` as the preferred entry point for M-OWODB PROB training, evaluation, rendering, and resume workflows. The canonical baseline config is:
+
+```text
+configs/pipeline_mowodb_prob.json
+```
+
+The canonical stage chain is:
+
+```text
+t1 -> t2 -> t2_ft -> t3 -> t3_ft -> t4 -> t4_ft -> eval -> render
+```
+
+For new model or ablation work:
+
+- Do not edit `configs/pipeline_mowodb_prob.json` in place for non-baseline experiments.
+- Copy it to a method-specific config such as `configs/pipeline_mowodb_<method>.json`.
+- Give each method its own `exps/MOWODB/<METHOD>/` and `results/MOWODB/<METHOD>/` directories.
+- Preserve the same stage order, train/test splits, class counts, and eval protocol unless the research question explicitly requires a protocol change.
+- Keep final metrics extractable from real `log.txt` files.
+- Keep `results/MOWODB/<METHOD>/run_manifest.json`, `eval_manifest.json`, `owod_results.html`, and `owod_results.csv` as the provenance and reporting artifacts.
+
+Recommended server checks before long runs:
+
+```bash
+cd /home/zym/PB
+git pull origin main
+source scripts/server_env.sh
+python -m py_compile scripts/run_mowodb_pipeline.py scripts/build_comparison_manifest.py scripts/render_experiment_results.py scripts/smoke_eval_results.py main_open_world.py datasets/open_world_eval.py
+CUDA_VISIBLE_DEVICES=<gpu_id> python scripts/smoke_eval_results.py --task 1 --max-images 3 --data-root /home/zym/data/OWOD --splits-root /home/zym/PB/data/OWOD --coco-path /home/zym/data/coco --checkpoint-dir exps/MOWODB/PROB --num-workers 0
+python scripts/run_mowodb_pipeline.py --config configs/pipeline_mowodb_prob.json --gpu <gpu_id> --dry-run
+```
+
+Use `scripts/build_comparison_manifest.py` for final multi-model tables. Prefer comparing methods from their `run_manifest.json` files:
+
+```bash
+python scripts/build_comparison_manifest.py --title "M-OWODB Final Comparison" --baseline PROB --output results/MOWODB/model_comparison_manifest.json --output-dir results/MOWODB/comparison --run PROB:results/MOWODB/PROB/run_manifest.json --run NewModel:results/MOWODB/NewModel/run_manifest.json --render
+```
+
+Do not use `--skip-checks` for final reported comparison tables.
