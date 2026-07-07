@@ -203,6 +203,65 @@ results/MOWODB/PROB/eval_manifest.json
 results/MOWODB/PROB/run_manifest.json
 ```
 
+## Multi-Model Comparison
+
+The final comparison table can combine multiple methods as long as each method
+has four eval task directories with `log.txt`:
+
+```text
+exps/MOWODB/<METHOD>/eval/t1/log.txt
+exps/MOWODB/<METHOD>/eval/t2/log.txt
+exps/MOWODB/<METHOD>/eval/t3/log.txt
+exps/MOWODB/<METHOD>/eval/t4/log.txt
+```
+
+Build and render a comparison from pipeline run manifests:
+
+```bash
+python scripts/build_comparison_manifest.py \
+  --title "M-OWODB Final Comparison" \
+  --baseline PROB \
+  --output results/MOWODB/model_comparison_manifest.json \
+  --output-dir results/MOWODB/comparison \
+  --run PROB:results/MOWODB/PROB/run_manifest.json \
+  --run NewModel:results/MOWODB/NewModel/run_manifest.json \
+  --render
+```
+
+You can also use eval manifests:
+
+```bash
+python scripts/build_comparison_manifest.py \
+  --title "M-OWODB Final Comparison" \
+  --baseline PROB \
+  --output results/MOWODB/model_comparison_manifest.json \
+  --output-dir results/MOWODB/comparison \
+  --run PROB:results/MOWODB/PROB/eval_manifest.json \
+  --run NewModel:results/MOWODB/NewModel/eval_manifest.json \
+  --render
+```
+
+Or pass eval directories directly:
+
+```bash
+python scripts/build_comparison_manifest.py \
+  --title "M-OWODB Final Comparison" \
+  --baseline PROB \
+  --output results/MOWODB/model_comparison_manifest.json \
+  --output-dir results/MOWODB/comparison \
+  --run PROB:exps/MOWODB/PROB/eval \
+  --run NewModel:exps/MOWODB/NewModel/eval \
+  --render
+```
+
+Comparison outputs:
+
+```text
+results/MOWODB/model_comparison_manifest.json
+results/MOWODB/comparison/owod_results.html
+results/MOWODB/comparison/owod_results.csv
+```
+
 Stage tee logs:
 
 ```text
@@ -281,4 +340,3 @@ Unexpected GPU label:
 
 The pipeline records `GPU 2` when invoked with `--gpu 2`. This means physical
 GPU id 2 through `CUDA_VISIBLE_DEVICES=2`, not two GPUs.
-
